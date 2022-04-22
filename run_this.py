@@ -27,7 +27,7 @@ def update():
 
     # end of game
     print('game over')
-    env.destroy()
+    env.clear()
 
 if __name__ == "__main__":
 
