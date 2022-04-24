@@ -256,7 +256,7 @@ class MyThread(threading.Thread):
 def getStep(playerStat, ghostStat, propsStat):
     global action
     global parallel_wall, vertical_wall
-    global prev_pos dis_between, dis_to_chase
+    global prev_pos, dis_between, dis_to_chase
     '''
     control of your player
     0: left, 1:right, 2: up, 3: down 4:no control
