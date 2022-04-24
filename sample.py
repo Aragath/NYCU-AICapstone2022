@@ -1,6 +1,6 @@
 import random
 import threading
-import python.STcpClient as STcpClient
+import STcpClient as STcpClient
 import time
 import sys
 
@@ -129,6 +129,7 @@ def A_Star_Search(start_pos, goal_pos):           #return next move
           white_list.append(child)
 
 def EatOrRun(playerState, ghostState) -> list:
+    global prev_pos, dis_between, dis_to_chase
     # get all pos
     g1 = ghostState[0]
     g2 = ghostState[1]
@@ -176,7 +177,6 @@ def EatOrRun(playerState, ghostState) -> list:
     # if no ghost is near, return empty list
     if(dis_between * 25 < nearest_dis):
         return next_step
-    
     # elif check if the ghost is chasing us, if yes, escape
     elif(x_samesign and y_samesign):
         if(x_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 1))):
@@ -186,13 +186,47 @@ def EatOrRun(playerState, ghostState) -> list:
         if(y_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 3))):
             next_step.append(3)
         elif(y_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 2))):
-            next_step.append(2)            
+            next_step.append(2)
+
+        if(len(next_step) == 0):      #all escaping direction hit the wall
+            if(x_between == 0):           #final escaping method: turn left or right
+                if(not hit_the_wall(playerState[0], playerState[1], 0)):
+                    next_step.append(0)
+                if(not hit_the_wall(playerState[0], playerState[1], 1)):
+                    next_step.append(1)
+            elif(y_between == 0):         #final escaping method: turn up or down. https://imgur.com/aQyA7kv
+                if(not hit_the_wall(playerState[0], playerState[1], 2)):
+                    next_step.append(2)
+                if(not hit_the_wall(playerState[0], playerState[1], 3)):
+                    next_step.append(3)
+            else:           #we will get closer to the ghost, but it's better than stand still. https://imgur.com/GjpRvHb
+                if(not hit_the_wall(playerState[0], playerState[1], 0)):
+                    next_step.append(0)
+                if(not hit_the_wall(playerState[0], playerState[1], 1)):
+                    next_step.append(1)
+                if(not hit_the_wall(playerState[0], playerState[1], 2)):
+                    next_step.append(2)
+                if(not hit_the_wall(playerState[0], playerState[1], 3)):
+                    next_step.append(3)
         return next_step
+    #the ghost is near but not chasing us, don't wory
     else:
         return next_step
 
 def hardship(urgencylist, direction):     #deal with the problem like: urglist tells you to turn left or down, but the AStatSearch tells you to turn up
-  
+   #0: left, 1:right, 2: up, 3: down
+   result = direction
+   dir1 = urgencylist[0]
+   dir2 = urgencylist[1]
+   if(direction != dir1 and direction != dir2):
+      if((abs(direction - dir1) == 1) and (direction * dir1) != 2):
+          result = dir2
+      elif((abs(direction - dir2) == 1) and (direction * dir2) != 2):
+          result = dir1
+      else:
+          result = random.choice([dir1, dir2])      #see the report to get the description. such like: https://imgur.com/aQyA7kv
+   return result
+
 
 class MyThread(threading.Thread): 
    def __init__(self, *args, **keywords): 
@@ -223,12 +257,15 @@ class MyThread(threading.Thread):
 def getStep(playerStat, ghostStat, propsStat):
     global action
     global parallel_wall, vertical_wall
+    global prev_pos dis_between, dis_to_chase
     '''
     control of your player
     0: left, 1:right, 2: up, 3: down 4:no control
     format is (control, set landmine or not) = (0~3, True or False)
     put your control in action and time limit is 0.04sec for one step
     '''
+    dis_between = 4
+    dis_to_chase = 6
     urgencylist = EatOrRun(player, ghostStat)
     start_pos = (playerStat[0], playerStat[1])
     goal_pos = find_one_goal_pellet(start_pos, propsStat)
@@ -243,6 +280,8 @@ def getStep(playerStat, ghostStat, propsStat):
     if playerStat[2] > 0:
       landmine = random.choice([True, False])
     action = [move, landmine]
+
+    prev_pos = ghostStat.copy()
     #move = random.choice([0, 1, 2, 3, 4])
     #landmine = False
     #if playerStat[2] > 0:
