@@ -265,7 +265,7 @@ def getStep(playerStat, ghostStat, propsStat):
     '''
     dis_between = 4
     dis_to_chase = 6
-    urgencylist = EatOrRun(player, ghostStat)
+    urgencylist = EatOrRun(playerStat, ghostStat)
     start_pos = (playerStat[0], playerStat[1])
     goal_pos = find_one_goal_pellet(start_pos, propsStat)
     direction = A_Star_Search(start_pos, goal_pos)
