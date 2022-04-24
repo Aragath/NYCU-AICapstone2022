@@ -44,13 +44,13 @@ def EatOrRun(playerState, ghostState) -> list:
     
     # if supermode and ghost near, chase the ghost
     if(playerState[3] > 0 and dis_to_chase * 25 > nearest_dis):
-        if(x_between > 0):
+        if(x_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 0))):
             next_step.append(0)
-        elif(x_between < 0):
+        elif(x_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 1))):
             next_step.append(1)
-        if(y_between > 0):
+        if(y_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 2))):
             next_step.append(2)
-        elif(y_between < 0):
+        elif(y_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 3))):
             next_step.append(3)            
         return next_step        
     
@@ -60,13 +60,13 @@ def EatOrRun(playerState, ghostState) -> list:
     
     # elif check if the ghost is chasing us, if not, return no control, or else escape
     elif(x_samesign and y_samesign):
-        if(x_between > 0):
+        if(x_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 1))):
             next_step.append(1)
-        elif(x_between < 0):
+        elif(x_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 0))):
             next_step.append(0)
-        if(y_between > 0):
+        if(y_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 3))):
             next_step.append(3)
-        elif(y_between < 0):
+        elif(y_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 2))):
             next_step.append(2)            
         return next_step
     else:
