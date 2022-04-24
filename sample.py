@@ -99,7 +99,7 @@ def A_Star_Search(start_pos, goal_pos):           #return next move
       if gray_node == goal_node:
           path = []
           current = gray_node
-          while current is not None
+          while current is not None:
               path.append(current.position)
               current = current.parent
           next_pos =  path[len(path)-2]          #the next position which the agent needs to go to
