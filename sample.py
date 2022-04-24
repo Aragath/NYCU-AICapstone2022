@@ -30,28 +30,28 @@ def what_is_next(start_pos, next_pos):            #to determine the direction (u
 
     return direction
 
-def hit_the_wall(x_currentnode, y_currentnode, move_index):      #the move_index here is not as same as the action, just an index
+def hit_the_wall(x_currentnode, y_currentnode, move_index):
   global parallel_wall, vertical_wall
   col_index = (x_currentnode-1)//25
   row_index = (y_currentnode-1)//25
 
-  if(move_index == 0): #move up, check the parallel_wall 
-    if(parallel_wall[col_index][row_index] == 1):
-      return True
-    else:
-      return False
-  elif(move_index == 1): #move down, check the parallel_wall 
-    if(parallel_wall[col_index][row_index+1] == 1):
-      return True
-    else:
-      return False
-  elif(move_index == 2): #move left, check the vertical_wall
+  if(move_index == 0): #move left, check the vertical_wall
     if(vertical_wall[col_index][row_index] == 1):
       return True
     else:
       return False
-  elif(move_index == 3): #move right, check the vertical_wall 
+  elif(move_index == 1): #move right, check the vertical_wall
     if(vertical_wall[col_index+1][row_index] == 1):
+      return True
+    else:
+      return False
+  elif(move_index == 2): #move up, check the parallel_wall
+    if(parallel_wall[col_index][row_index] == 1):
+      return True
+    else:
+      return False
+  elif(move_index == 3): #move down, check the parallel_wall
+    if(parallel_wall[col_index][row_index+1] == 1):
       return True
     else:
       return False
@@ -89,7 +89,7 @@ def A_Star_Search(start_pos, goal_pos):           #return next move
           return what_is_next(start_pos, next_pos) 
       #not yet found the goal_node
       children = []
-      for move_index, move_to in enumerate([(0, -5), (0, 5), (-5, 0), (5, 0)]):    #5 points per time step
+      for move_index, move_to in enumerate([(-5, 0), (5, 0), (0, -5), (0, 5)]):    #5 points per time step
           new_node_pos = (gray_node.position[0] + move_to[0], gray_node.position[1] + move_to[1])
           if new_node_pos[0] > 376 or new_node_pos[0] < 1 or new_node_pos[1] > 376 or new_node_pos[1] < 1:    #check the boarder
               continue
