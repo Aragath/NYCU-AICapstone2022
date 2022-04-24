@@ -49,9 +49,9 @@ def EatOrRun(playerState, ghostState) -> list:
         elif(x_between < 0):
             next_step.append(1)
         if(y_between > 0):
-            next_step.append(3)
+            next_step.append(2)
         elif(y_between < 0):
-            next_step.append(2)            
+            next_step.append(3)            
         return next_step        
     
     # if no ghost is near, return empty list
@@ -65,9 +65,9 @@ def EatOrRun(playerState, ghostState) -> list:
         elif(x_between < 0):
             next_step.append(0)
         if(y_between > 0):
-            next_step.append(2)
+            next_step.append(3)
         elif(y_between < 0):
-            next_step.append(3)            
+            next_step.append(2)            
         return next_step
     else:
         next_step.append(4)
