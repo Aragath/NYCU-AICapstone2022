@@ -27,9 +27,8 @@ def find_one_goal_pellet(start_pos, propsStat):
         y = propsStat[i][2]
       if(mindis <= 50**2 + 50**2):     #very very very close
         break
-
-    goal = (x, y)
-    return goal
+   goal = (x, y)
+   return goal
 
 
 def what_is_next(start_pos, next_pos):            #to determine the direction (up, down, left, right)
