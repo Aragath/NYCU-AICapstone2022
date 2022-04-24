@@ -45,7 +45,7 @@ def what_is_next(start_pos, next_pos):            #to determine the direction (u
       if dif_x < 0:
           direction = 0       #left
 
-    return direction
+   return direction
 
 def hit_the_wall(x_currentnode, y_currentnode, move_index):
   global parallel_wall, vertical_wall
