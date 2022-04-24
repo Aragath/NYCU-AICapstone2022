@@ -14,6 +14,24 @@ class AstarNode():
    def __eq__(self, other):
        return self.position == other.position
 
+def find_one_goal_pellet(start_pos, propsStat):
+   n_props = len(propsStat)
+   mindis = 400**2 + 400**2
+   for i in range(n_props):
+      if(propsStat[i][0] != 2):
+        continue
+      dis = (propsStat[i][1] - start_pos[0])**2 + (propsStat[i][2] - start_pos[1])**2
+      if(dis < mindis):
+        mindis = dis
+        x = propsStat[i][1]
+        y = propsStat[i][2]
+      if(mindis <= 50**2 + 50**2):     #very very very close
+        break
+
+    goal = (x, y)
+    return goal
+
+
 def what_is_next(start_pos, next_pos):            #to determine the direction (up, down, left, right)
    if next_pos[0] - start_pos[0] == 0:      #only y's dif
       dif_y = next_pos[1] - start_pos[1]
@@ -110,6 +128,71 @@ def A_Star_Search(start_pos, goal_pos):           #return next move
                   continue
           white_list.append(child)
 
+def EatOrRun(playerState, ghostState) -> list:
+    # get all pos
+    g1 = ghostState[0]
+    g2 = ghostState[1]
+    g3 = ghostState[2]
+    g4 = ghostState[3]
+    player_pos = [playerState[0], playerState[1]]
+
+    # get all dis between
+    d1 = [coord1 - coord2 for (coord1, coord2) in zip(player_pos, g1)]
+    d1 = abs(d1[0]) + abs(d1[1])
+    d2 = [coord1 - coord2 for (coord1, coord2) in zip(player_pos, g2)]
+    d2 = abs(d2[0]) + abs(d2[1])
+    d3 = [coord1 - coord2 for (coord1, coord2) in zip(player_pos, g3)]
+    d3 = abs(d3[0]) + abs(d3[1])
+    d4 = [coord1 - coord2 for (coord1, coord2) in zip(player_pos, g4)]
+    d4 = abs(d4[0]) + abs(d4[1])
+    
+    # get the min dis
+    dis_list = [d1, d2, d3, d4]
+    nearest_dis = min(dis_list)
+    nearest_index = dis_list.index(nearest_dis) # if g1 is the nearest, index = 0
+        
+    now_pos = ghostState[nearest_index]
+    x_dir = now_pos[0] - prev_pos[nearest_index][0]
+    y_dir = now_pos[1] - prev_pos[nearest_index][1]
+    x_between = playerState[0] - now_pos[0]
+    y_between = playerState[1] - now_pos[1]
+    x_samesign = (((x_dir < 0) == (x_between < 0)) or ((x_dir > 0) == (x_between > 0)))
+    y_samesign = (((y_dir < 0) == (y_between < 0)) or ((y_dir > 0) == (y_between > 0)))
+    
+    next_step = []
+    
+    # if supermode and ghost near, chase the ghost
+    if(playerState[3] > 0 and dis_to_chase * 25 > nearest_dis):
+        if(x_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 0))):
+            next_step.append(0)
+        elif(x_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 1))):
+            next_step.append(1)
+        if(y_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 2))):
+            next_step.append(2)
+        elif(y_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 3))):
+            next_step.append(3)            
+        return next_step        
+    
+    # if no ghost is near, return empty list
+    if(dis_between * 25 < nearest_dis):
+        return next_step
+    
+    # elif check if the ghost is chasing us, if yes, escape
+    elif(x_samesign and y_samesign):
+        if(x_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 1))):
+            next_step.append(1)
+        elif(x_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 0))):
+            next_step.append(0)
+        if(y_between > 0 and (not hit_the_wall(playerState[0], playerState[1], 3))):
+            next_step.append(3)
+        elif(y_between < 0 and (not hit_the_wall(playerState[0], playerState[1], 2))):
+            next_step.append(2)            
+        return next_step
+    else:
+        return next_step
+
+def hardship(urgencylist, direction):     #deal with the problem like: urglist tells you to turn left or down, but the AStatSearch tells you to turn up
+  
 
 class MyThread(threading.Thread): 
    def __init__(self, *args, **keywords): 
@@ -146,11 +229,21 @@ def getStep(playerStat, ghostStat, propsStat):
     format is (control, set landmine or not) = (0~3, True or False)
     put your control in action and time limit is 0.04sec for one step
     '''
-
+    urgencylist = EatOrRun(player, ghostStat)
     start_pos = (playerStat[0], playerStat[1])
-    goal_pos = (propsStat[0][1], propsStat[0][2])     #can be changed
+    goal_pos = find_one_goal_pellet(start_pos, propsStat)
+    direction = A_Star_Search(start_pos, goal_pos)
+    if(len(urgencylist) == 0):
+      move = direction                #just consider the pellet
+    elif(len(urgencylist) == 1):
+      move = urgencylist[0]           #do this first, don't consider the pellet
+    elif(len(urgencylist) == 2):
+      move = hardship(urgencylist, direction)     #see the function description to get the details
 
-    #move = random.choice([2])
+    if playerStat[2] > 0:
+      landmine = random.choice([True, False])
+    action = [move, landmine]
+    #move = random.choice([0, 1, 2, 3, 4])
     #landmine = False
     #if playerStat[2] > 0:
     #    landmine = random.choice([True, False])
