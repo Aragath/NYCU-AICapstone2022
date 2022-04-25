@@ -309,12 +309,12 @@ def getStep(playerStat, ghostStat, propsStat):
             y_between = start_pos[1] - goal_pos[1]
             print("x between: ", x_between)
             print("y between: ", y_between)
-            if(x_between >= 15 and (not hit_the_wall(start_pos[0], start_pos[1], 1))):
-                print("cand is 1")
-                candidate.append(1)
-            elif(x_between < -10 and (not hit_the_wall(start_pos[0], start_pos[1], 0))):
+            if(x_between >= 15 and (not hit_the_wall(start_pos[0], start_pos[1], 0))):
                 print("cand is 0")
                 candidate.append(0)
+            elif(x_between < -10 and (not hit_the_wall(start_pos[0], start_pos[1], 1))):
+                print("cand is 1")
+                candidate.append(1)
             elif(y_between > 0 and (not hit_the_wall(start_pos[0], start_pos[1], 2))):
                 print("cand is 2")
                 candidate.append(2)
