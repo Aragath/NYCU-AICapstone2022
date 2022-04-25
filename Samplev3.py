@@ -293,7 +293,7 @@ def getStep(playerStat, ghostStat, propsStat):
     if(len(urgencylist) == 1):
         move = urgencylist[0]           #do this first, don't consider the pellet
         planB = move
-    elif(playerStat[3] > 0):
+    elif(playerStat[3] > 0 and urgencylist!=[]):
         move = urgencylist[0]           # two direction possible and under supermode, so do urgency first
         planB = move
     else:
