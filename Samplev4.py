@@ -151,7 +151,7 @@ def A_Star_Search(start_pos, goal_pos):           #return next move
           print(path[::-1])
           go_to = what_is_next(start_pos_transformed, next_pos)
           print("go_to: ", go_to)
-          return  
+          return go_to
       #not yet found the goal_node
       children = []
       for move_index, move_to in enumerate([(-1, 0), (1, 0), (0, -1), (0, 1)]):    #5 points per time step
