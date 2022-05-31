@@ -2078,12 +2078,15 @@ class _ShipyardTarget:
 
 def capture_shipyards(agent: Player, max_attack_distance=10):
     board = agent.board
+    # get agent's shipyard that can attend attacks
     agent_shipyards = [
         x for x in agent.shipyards if x.available_ship_count >= 3 and not x.action
     ]
+    # if none then return
     if not agent_shipyards:
         return
 
+    # get possible targets
     targets = []
     for op_sy in board.shipyards:
         if op_sy.player_id == agent.game_id or op_sy.incoming_hostile_fleets:
@@ -2103,13 +2106,15 @@ def capture_shipyards(agent: Player, max_attack_distance=10):
         for sy in shipyards:
             if sy.action:
                 continue
-
+                
+            # if too far, don't attack
             distance = sy.point.distance_from(t.point)
             if distance > max_attack_distance:
                 continue
 
             power = t.estimate_shipyard_power(distance)
-
+            
+            # if agent's shipyard too weak, don't attack
             if sy.available_ship_count <= power:
                 continue
 
