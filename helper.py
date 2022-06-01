@@ -12,6 +12,7 @@ from config import (
 )
 from itertools import groupby
 
+# Miner
 def getNearestLargestKore(shipyardPos: Point, board: Board) -> Point:
     #print("finding max kore where shipyardPos: ", shipyardPos)
     me = board.current_player
@@ -27,7 +28,7 @@ def getNearestLargestKore(shipyardPos: Point, board: Board) -> Point:
             if curr_cell_kore > max_kore:
                 max_kore = curr_cell_kore
                 max_kore_pos = pos
-    print("max_kore_pos: ", max_kore_pos, " with ", max_kore, " kores")
+    #print("max_kore_pos: ", max_kore_pos, " with ", max_kore, " kores")
     return max_kore_pos
 
 def getNearbyLargestKore(shipyardPos: Point, board: Board) -> Point:
@@ -44,7 +45,7 @@ def getNearbyLargestKore(shipyardPos: Point, board: Board) -> Point:
             if shipyardPos.distance_to(pos, size) <= MAX_DIS and curr_cell_kore > max_kore:
                 max_kore = curr_cell_kore
                 max_kore_pos = pos
-    print("nearby max_kore_pos: ", max_kore_pos, " with ", max_kore, " kores")
+    #print("nearby max_kore_pos: ", max_kore_pos, " with ", max_kore, " kores")
     return max_kore_pos
     
 def getFlightPlan(shipyardPos: Point, targetPos: Point, num_ships: int, board: Board) -> str:
@@ -54,7 +55,7 @@ def getFlightPlan(shipyardPos: Point, targetPos: Point, num_ships: int, board: B
     
     dx = int(targetPos.x - shipyardPos.x)
     dy = int(targetPos.y - shipyardPos.y)
-    print("dx: ", dx, " dy: ", dy)
+    #print("dx: ", dx, " dy: ", dy)
     
     if(dx > 0 and abs(dx) >= 11):
         dx = -(21-dx)
@@ -64,7 +65,7 @@ def getFlightPlan(shipyardPos: Point, targetPos: Point, num_ships: int, board: B
         dx = 21+dx    
     if(dy < 0 and abs(dy) >= 11):
         dy = 21+dy
-    print("tweaked dx: ", dx, " dy: ", dy)
+    #print("tweaked dx: ", dx, " dy: ", dy)
     
     rough_plan= ""
     if dx > 0 and dy > 0:
@@ -133,3 +134,136 @@ def reversed_str(original: str) -> str:
             return_str = return_str + "W"
     #print("reversed string: ", return_str)
     return return_str   
+
+# Attacker
+def getWeakestShipyard(shipyardPos: Point, board: Board) -> Point:
+    #print("finding max kore where shipyardPos: ", shipyardPos)
+    me = board.current_player
+    size = GAME_CONFIG['size']
+    
+    min_fleet = 5000
+    min_fleet_pos = shipyardPos
+    # Get weakest shipyard pos
+    for op in board.opponents:
+        for sy in op.shipyards:
+            pos = sy.position
+            curr_sy_fleet = sy.ship_count
+            if curr_sy_fleet < min_fleet:
+                min_fleet = curr_sy_fleet
+                min_fleet_pos = pos
+    return min_fleet_pos
+
+def getAttackFlightPlan(shipyardPos: Point, targetPos: Point, num_ships: int, board: Board) -> str:
+    #print("shipyardPos: ", shipyardPos)
+    #print("targetPos: ", targetPos)
+    me = board.current_player
+    
+    dx = int(targetPos.x - shipyardPos.x)
+    dy = int(targetPos.y - shipyardPos.y)
+    #print("dx: ", dx, " dy: ", dy)
+    
+    if(dx > 0 and abs(dx) >= 11):
+        dx = -(21-dx)
+    if(dy > 0 and abs(dy) >= 11):
+        dy = -(21-dy)    
+    if(dx < 0 and abs(dx) >= 11):
+        dx = 21+dx    
+    if(dy < 0 and abs(dy) >= 11):
+        dy = 21+dy
+    #print("tweaked dx: ", dx, " dy: ", dy)
+    
+    rough_plan= ""
+    if dx > 0 and dy > 0:
+        rough_plan = rough_plan + "E" * dx
+        rough_plan = rough_plan + "N" * dy
+    elif dx > 0 and dy < 0:
+        rough_plan = rough_plan + "E" * dx
+        rough_plan = rough_plan + "S" * -dy
+    elif dx < 0 and dy > 0:
+        rough_plan = rough_plan + "W" * -dx
+        rough_plan = rough_plan + "N" * dy
+    elif dx < 0 and dy < 0:
+        rough_plan = rough_plan + "W" * -dx
+        rough_plan = rough_plan + "S" * -dy
+    elif dx == 0:
+        if dy > 0:
+            rough_plan = rough_plan + "N" * dy
+        elif dy < 0:
+            rough_plan = rough_plan + "S" * -dy
+    elif dy == 0:
+        if dx > 0:
+            rough_plan = rough_plan + "E" * dx
+        elif dx < 0:
+            rough_plan = rough_plan + "W" * -dx
+
+    return simplify(rough_plan)
+    
+    counter = 0
+    while True:
+        counter+=1
+        shuffled = ''.join(random.sample(rough_plan,len(rough_plan)))
+        
+        flight_plan = simplify(shuffled)
+        
+        # len matches
+        if(len(flight_plan) < max_flight_plan_len(num_ships)):
+            return flight_plan + simplify(reversed_str(rough_plan))
+        # too many times
+        elif counter >=10:
+            return simplify(rough_plan) + simplify(reversed_str(rough_plan))
+        
+# Builder
+def getBuildFlightPlan(shipyardPos: Point, targetPos: Point, num_ships: int, board: Board) -> str:
+    me = board.current_player
+    
+    dx = int(targetPos.x - shipyardPos.x)
+    dy = int(targetPos.y - shipyardPos.y)
+    
+    if(dx > 0 and abs(dx) >= 11):
+        dx = -(21-dx)
+    if(dy > 0 and abs(dy) >= 11):
+        dy = -(21-dy)    
+    if(dx < 0 and abs(dx) >= 11):
+        dx = 21+dx    
+    if(dy < 0 and abs(dy) >= 11):
+        dy = 21+dy
+    
+    rough_plan= ""
+    if dx > 0 and dy > 0:
+        rough_plan = rough_plan + "E" * dx
+        rough_plan = rough_plan + "N" * dy
+    elif dx > 0 and dy < 0:
+        rough_plan = rough_plan + "E" * dx
+        rough_plan = rough_plan + "S" * -dy
+    elif dx < 0 and dy > 0:
+        rough_plan = rough_plan + "W" * -dx
+        rough_plan = rough_plan + "N" * dy
+    elif dx < 0 and dy < 0:
+        rough_plan = rough_plan + "W" * -dx
+        rough_plan = rough_plan + "S" * -dy
+    elif dx == 0:
+        if dy > 0:
+            rough_plan = rough_plan + "N" * dy
+        elif dy < 0:
+            rough_plan = rough_plan + "S" * -dy
+    elif dy == 0:
+        if dx > 0:
+            rough_plan = rough_plan + "E" * dx
+        elif dx < 0:
+            rough_plan = rough_plan + "W" * -dx
+
+    return simplify(rough_plan) + "C"
+    
+    counter = 0
+    while True:
+        counter+=1
+        shuffled = ''.join(random.sample(rough_plan,len(rough_plan)))
+        
+        flight_plan = simplify(shuffled)
+        
+        # len matches
+        if(len(flight_plan) < max_flight_plan_len(num_ships)):
+            return flight_plan + simplify(reversed_str(rough_plan))
+        # too many times
+        elif counter >=10:
+            return simplify(rough_plan) + simplify(reversed_str(rough_plan))

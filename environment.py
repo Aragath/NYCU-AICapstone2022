@@ -226,31 +226,56 @@ class KoreGymEnv(gym.Env):
                 number_of_ships = min(number_of_ships, max_spawn, max_purchasable)
                 if number_of_ships:
                     action = ShipyardAction.spawn_ships(number_ships=number_of_ships)
-#             # Attacker
-#             if -0.6 <= gym_action[0] < -0.2:
-#                 # Limit the number of ships to the amount that is actually present in the shipyard
-#                 shipyard_count = shipyard.ship_count
-#                 number_of_ships = min(number_of_ships, shipyard_count)
+                print("Defense ", number_of_ships)
                 
-#                 # Decide where to attack
-#                 if number_of_ships:
-#                     # try capture shipyard
-#                     flight_plan = capture_shipyard(number_of_ships=number_of_ships, agent=me, board=self.board)
-#                     if flight_plan !=None and flight_plan !="":
-#                         print(flight_plan)
-#                         action = ShipyardAction.launch_fleet_with_flight_plan(number_ships=number_of_ships, 
-#                                                                               flight_plan=flight_plan)
-                    # try direct attack
-#                     elif flight_plan == "":
-#                         flight_plan = direct_attack(number_of_ships, me, board)
-#                         action = ShipyardAction.launch_fleet_with_flight_plan(number_ships=number_of_ships, 
-#                                                                               flight_plan=flight_plan)
-#                     # try adjacent attack:
-#                     elif flight_plan == "":
-#                         flight_plan = adjacent_attack(number_of_ships, me, board)
-#                         action = ShipyardAction.launch_fleet_with_flight_plan(number_ships=number_of_ships, 
-#                                                                               flight_plan=flight_plan)
-                #action = ShipyardAction.spawn_ships(number_ships=number_of_ships)           
+            # Attacker
+            if -0.6 <= gym_action[0] < -0.2:
+                # Limit the number of ships to the amount that is actually present in the shipyard
+                shipyard_count = shipyard.ship_count
+                number_of_ships = min(number_of_ships, floor(shipyard_count * 2 / 3)) # *2/3 for not sending every fleet out
+                
+                # Decide where to attack
+                if number_of_ships:
+                    target_pos = Point(gym_action[2], gym_action[3])
+                    flight_plan = getAttackFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
+                    # if flight plan too long, go attack weakest shipyard
+                    if(len(flight_plan) > max_flight_plan_len(number_of_ships)):
+                        target_pos = getWeakestShipyard(shipyard.position, self.board)
+                        flight_plan = getAttackFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
+                    # if flight plan empty or still too long, random choose a direction
+                    if not flight_plan or len(flight_plan) > max_flight_plan_len(number_of_ships):
+                        action = ShipyardAction.launch_fleet_in_direction(number_ships=number_of_ships,
+                                                                          direction=Direction.random_direction())
+                    # launch flight plan if nonempty
+                    else:
+                        action = ShipyardAction.launch_fleet_with_flight_plan(number_ships=number_of_ships, 
+                                                                              flight_plan=flight_plan)
+                    print("Attack ", target_pos[0], target_pos[1], " with ", number_of_ships)
+                    print(flight_plan)
+            # Builder
+            elif -0.2 <= gym_action[0] < 0.2:
+                # Limit the number of ships to the amount that is actually present in the shipyard
+                shipyard_count = shipyard.ship_count
+                number_of_ships = min(number_of_ships, floor(shipyard_count * 2 / 3)) # *2/3 for not sending every fleet out
+                
+                # Get flight plan
+                if number_of_ships >= 50:
+                    target_pos = Point(gym_action[2], gym_action[3])
+                    flight_plan = getBuildFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
+                    # if flight plan too long, do greedy (since normal mine is bound to have longer flight plan)
+                    if(len(flight_plan) > max_flight_plan_len(number_of_ships)):
+                        target_pos = getNearbyLargestKore(shipyard.position, self.board)
+                        flight_plan = getFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
+                    # if flight plan empty or still too long, random choose a direction
+                    if not flight_plan or len(flight_plan) > max_flight_plan_len(number_of_ships):
+                        action = ShipyardAction.launch_fleet_in_direction(number_ships=number_of_ships,
+                                                                          direction=Direction.random_direction())
+                    # launch flight plan if nonempty
+                    else:
+                        action = ShipyardAction.launch_fleet_with_flight_plan(number_ships=number_of_ships, 
+                                                                              flight_plan=flight_plan)
+                    print("Build ", target_pos[0], target_pos[1], " with ", number_of_ships)
+                    print(flight_plan)
             # Greedy Spawner
             elif 0.2 <= gym_action[0] < 0.6:
                 # Limit the number of ships to the maximum that can be actually built
@@ -259,39 +284,38 @@ class KoreGymEnv(gym.Env):
                 number_of_ships = min(number_of_ships, max_spawn, max_purchasable)
                 if number_of_ships:
                     action = ShipyardAction.spawn_ships(number_ships=number_of_ships)
+                print("Spawn ", number_of_ships)
             # Miner
             elif 0.6 <= gym_action[0] <= 1:
                 # Get number of ships to launch
                 shipyard_count = shipyard.ship_count
                 number_of_ships = min(number_of_ships, floor(shipyard_count * 2 / 3)) # *2/3 for not sending every fleet out
                 if number_of_ships:
-#                     direction = round((gym_action[1] + 1) * 1.5)  # int between 0 (North) and 3 (West)
-#                     action = ShipyardAction.launch_fleet_in_direction(number_ships=number_of_ships,
-#                                                                       direction=Direction.from_index(direction))
                     target_pos = Point(gym_action[2], gym_action[3])
                     flight_plan = getFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
-                    print(gym_action[2], gym_action[3])
-                    print("######### flight plan: ", flight_plan)
+                    #print(gym_action[2], gym_action[3])
                     # if flight plan too long, go get max kore
                     if(len(flight_plan) > max_flight_plan_len(number_of_ships)):
                         target_pos = getNearestLargestKore(shipyard.position, self.board)
                         flight_plan = getFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
-                        print("######### do go fetch max kore, flight plan: ", flight_plan) 
+                        #print("######### do go fetch max kore, flight plan: ", flight_plan) 
                     # flight plan still too long, do greedy mine
                     if(len(flight_plan) > max_flight_plan_len(number_of_ships)):
                         target_pos = getNearbyLargestKore(shipyard.position, self.board)
                         flight_plan = getFlightPlan(shipyard.position, target_pos, number_of_ships, self.board)
-                        print("######### do greedy, flight plan: ", flight_plan) 
+                        #print("######### do greedy, flight plan: ", flight_plan) 
                     # if flight plan empty or still too long, random choose a direction
                     if not flight_plan or len(flight_plan) > max_flight_plan_len(number_of_ships):
-                        print("######### random flight plan: ", flight_plan)
+                        #print("######### random flight plan: ", flight_plan)
                         action = ShipyardAction.launch_fleet_in_direction(number_ships=number_of_ships,
                                                                           direction=Direction.random_direction())
                     # launch flight plan if nonempty
                     else:
-                        print("######### launch flight plan: ", flight_plan)
+                        #print("######### launch miner flight plan: ", flight_plan)
                         action = ShipyardAction.launch_fleet_with_flight_plan(number_ships=number_of_ships, 
                                                                               flight_plan=flight_plan)
+                    print("Mine ", target_pos[0], target_pos[1], " with ", number_of_ships)
+                    print(flight_plan)
             shipyard.next_action = action
 
         return me.next_actions
