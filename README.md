@@ -1,1 +1,0 @@
-# NYCU-AICapstone2022
