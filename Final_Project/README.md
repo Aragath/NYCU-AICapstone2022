@@ -1,1 +1,1 @@
-# NCTU-AICapstone2022
+# Final Project - Kore 2022
