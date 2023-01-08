@@ -2,11 +2,11 @@
 
 ## For *Artificial Intelligence Capstone* Course Instructed by 王才沛
 
-- [Battle Sheep](#Battle Sheep)
+- [Battle Sheep](#Battle-Sheep)
 
 - [Pacman](#Pacman)
 
-- [Final Project](#Final Project)
+- [Final Project](#Final-Project)
 
 ### Battle Sheep
 
